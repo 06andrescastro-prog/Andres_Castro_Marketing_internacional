@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi tienda</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f4f6fb;
+      color: #1d2433;
+      padding: 20px 16px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #003893;
+      font-size: 2rem;
+    }
+
+    .slogan {
+      text-align: center;
+      color: #555;
+      margin: 8px 0 18px;
+      font-size: 1.1rem;
+    }
+
+    .beneficios {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .beneficios span {
+      background: #fcd116;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* ---------- Filtros ---------- */
+    .filtros {
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .filtros button {
+      border: 2px solid #003893;
+      background: #fff;
+      color: #003893;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .filtros button.activo {
+      background: #003893;
+      color: #fff;
+    }
+
+    .filtros select {
+      padding: 8px 12px;
+      border-radius: 20px;
+      border: 2px solid #003893;
+      font-weight: 600;
+      color: #003893;
+      background: #fff;
+    }
+
+    /* ---------- Layout ---------- */
+    .contenedor {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .contenedor {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ---------- Productos ---------- */
+    #productos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .producto {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s;
+    }
+
+    .producto:hover {
+      transform: translateY(-4px);
+    }
+
+    .producto img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      background: #eef1f7;
+      display: block;
+    }
+
+    .sin-imagen {
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 70px;
+      background: linear-gradient(135deg, #fcd116, #003893);
+    }
+
+    .producto .info {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .etiqueta {
+      align-self: flex-start;
+      background: #e8eefc;
+      color: #003893;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    .producto h3 {
+      font-size: 1rem;
+    }
+
+    .descripcion {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    .precio {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ce1126;
+    }
+
+    .producto select {
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .talla-unica {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .producto button {
+      margin-top: auto;
+      background: #003893;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .producto button:hover {
+      background: #002a6e;
+    }
+
+    .vacio {
+      color: #777;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* ---------- Carrito ---------- */
+    .carrito {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      position: sticky;
+      top: 20px;
+      align-self: start;
+    }
+
+    .carrito h2 {
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+    }
+
+    #lista-carrito {
+      list-style: none;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+
+    #lista-carrito li {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-fila {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .item-nombre {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .item-talla {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .cantidad {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cantidad button {
+      width: 26px;
+      height: 26px;
+      border: 1px solid #ccc;
+      background: #f4f4f4;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .eliminar {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .resumen {
+      margin: 14px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .total {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .carrito > button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .vaciar {
+      background: #eee;
+      color: #333;
+    }
+
+    .finalizar {
+      background: #ce1126;
+      color: #fff;
+    }
+
+    .finalizar:hover {
+      background: #a50d1e;
+    }
+  </style>
+</head>
+<body>
+  <!DOCTYPE html>
+  <html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gorras y Camisetas de Selecciones - Harvey Sanabria</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+
+  <body>
+
+    <h1>⚽ Gorras y Camisetas de Selecciones - Harvey Sanabria</h1>
+
+    <p class="slogan">
+      Vístete con los colores de tu selección 🏆
+    </p>
+
+    <div class="beneficios">
+      <span>🚚 Envíos en Bogotá</span>
+      <span>🔒 Compra segura</span>
+      <span>📦 Seguimiento de pedido</span>
+      <span>🔄 Cambios de talla</span>
+    </div>
+
+    <div class="filtros">
+      <button class="activo" onclick="cambiarTipo('todos', this)">Todos</button>
+      <button onclick="cambiarTipo('camiseta', this)">👕 Camisetas</button>
+      <button onclick="cambiarTipo('gorra', this)">🧢 Gorras</button>
+
+      <select id="filtro-seleccion" onchange="mostrarProductos()">
+        <option value="todas">Todas las selecciones</option>
+      </select>
+    </div>
+
+    <div class="contenedor">
+
+      <div id="productos"></div>
+
+      <div class="carrito">
+        <h2>🧾 Carrito de Compras (<span id="contador">0</span>)</h2>
+
+        <ul id="lista-carrito"></ul>
+
+        <div class="resumen">
+          <p>
+            Envío: <strong>Gratis</strong>
+          </p>
+
+          <p class="total">
+            Total: $<span id="total">0</span>
+          </p>
+        </div>
+
+        <button class="vaciar" onclick="vaciarCarrito()">
+          🧼 Vaciar Carrito
+        </button>
+
+        <button class="finalizar" onclick="finalizarCompra()">
+          ✅ Finalizar Compra
+        </button>
+      </div>
+
+    </div>
+
+    <script src="js/script.js"></script>
+
+  </body>
+  </html>
+
+  <script>
+    const productos = [
+      {
+        id: 1,
+        nombre: "Camiseta Colombia Local",
+        descripcion: "Camiseta amarilla de la Selección Colombia, tela liviana y transpirable.",
+        tipo: "camiseta",
+        seleccion: "Colombia",
+        precio: 189900,
+        imagen: "https://futgod90.com/cdn/shop/files/MILLONARIOS_SIN_FONDO_1.png?v=1757893406"
+      },
+      {
+        id: 2,
+        nombre: "Camiseta Colombia Visitante",
+        descripcion: "Camiseta alternativa de la Selección Colombia para alentar en todo lado.",
+        tipo: "camiseta",
+        seleccion: "Colombia",
+        precio: 179900,
+        imagen: "https://www.classicfootballshirts.co.uk/cdn-cgi/image/fit=pad,q=70,f=webp/pub/media/catalog/product//8/3/833824jl6973l-1_h1jelsyx1qqp4aka.jpg"
+      },
+      {
+        id: 3,
+        nombre: "Gorra Colombia",
+        descripcion: "Gorra con los colores de la Selección Colombia, ajustable.",
+        tipo: "gorra",
+        seleccion: "Colombia",
+        precio: 69900,
+        imagen: "https://diablografico.com/wp-content/uploads/2024/10/FCFD-0124Rojo_1.jpg"
+      },
+      {
+        id: 4,
+        nombre: "Camiseta Argentina",
+        descripcion: "Camiseta albiceleste de la Selección Argentina.",
+        tipo: "camiseta",
+        seleccion: "Argentina",
+        precio: 189900,
+        imagen: "https://www.reasonwhy.es/media/cache/destacada/camiseta-argentina-2022.jpg"
+      },
+      {
+        id: 5,
+        nombre: "Gorra Argentina",
+        descripcion: "Gorra celeste y blanca, cierre ajustable.",
+        tipo: "gorra",
+        seleccion: "Argentina",
+        precio: 64900,
+        imagen: "https://www.opensports.com.ar/media/catalog/product/cache/4cbe9863fc1e4aa316955fdd123a5af3/K/E/KE1384_0.jpg"
+      },
+      {
+        id: 6,
+        nombre: "Camiseta Brasil",
+        descripcion: "Camiseta verdeamarela de la Selección Brasil.",
+        tipo: "camiseta",
+        seleccion: "Brasil",
+        precio: 189900,
+        imagen: "https://guayosbogotop.com/cdn/shop/files/Retro_42_e79212bf-68e7-4cc3-9558-8a999dadfb5c.jpg?v=1767686482&width=600"
+      },
+      {
+        id: 7,
+        nombre: "Gorra Brasil",
+        descripcion: "Gorra verde y amarilla inspirada en la Selección Brasil.",
+        tipo: "gorra",
+        seleccion: "Brasil",
+        precio: 64900,
+        imagen: "https://www.futbolemotion.com/imagesarticulos/322929/750/gorra-nike-brasil-mundial-2026-amarillo-0.webp"
+      },
+      {
+        id: 8,
+        nombre: "Camiseta España",
+        descripcion: "Camiseta roja de la Selección España.",
+        tipo: "camiseta",
+        seleccion: "España",
+        precio: 179900,
+        imagen: "https://media.revistagq.com/photos/69bcd2e38f6af70ac3ca00ef/16:9/w_1920,c_limit/espana-camiseta-adidas-mundial.jpeg"
+      },
+      {
+        id: 9,
+        nombre: "Camiseta México",
+        descripcion: "Camiseta verde de la Selección México.",
+        tipo: "camiseta",
+        seleccion: "México",
+        precio: 174900,
+        imagen: "https://www.sportline.com.co/media/catalog/product/j/l/jl8580_apparel-front-center-view.jpg?optimize=medium&bg-color=255,255,255&fit=bounds&height=&width=&canvas=:"
+      },
+      {
+        id: 10,
+        nombre: "Gorra México",
+        descripcion: "Gorra tricolor inspirada en la Selección México.",
+        tipo: "gorra",
+        seleccion: "México",
+        precio: 59900,
+        imagen: "https://dpjye2wk9gi5z.cloudfront.net/wcsstore/ExtendedSitesCatalogAssetStore/images/catalog/zoom/4014540-0605V1.jpg"
+      },
+      {
+        id: 11,
+        nombre: "Camiseta Francia",
+        descripcion: "Camiseta azul de la Selección Francia.",
+        tipo: "camiseta",
+        seleccion: "Francia",
+        precio: 179900,
+        imagen: "https://www.sportline.com.co/media/catalog/product/i/b/ib5300-480_phsfh001-2000.jpeg?optimize=medium&bg-color=255,255,255&fit=bounds&height=&width=&canvas=:"
+      },
+      {
+        id: 12,
+        nombre: "Camiseta de Alemania",
+        descripcion: "Gorra negra con detalles en rojo y dorado.",
+        tipo: "gorra",
+        seleccion: "Alemania",
+        precio: 179900,
+        imagen: "https://acdn-us.mitiendanube.com/stores/003/455/886/products/alemania-941-b7c7af3bb7898e024a16915196000975-1024-1024.webp"
+      }
+    ];
+
+    const TALLAS = ["S", "M", "L", "XL", "XXL"];
+
+
+    /* ==============================
+       CARRITO
+    ================================ */
+
+    const carrito = [];
+
+    let filtroTipo = "todos";
+
+    const contenedorProductos = document.getElementById("productos");
+    const listaCarrito = document.getElementById("lista-carrito");
+    const totalCarrito = document.getElementById("total");
+    const contadorCarrito = document.getElementById("contador");
+    const filtroSeleccion = document.getElementById("filtro-seleccion");
+
+
+    /* ==============================
+       FORMATO DE PRECIOS
+    ================================ */
+
+    function formatoPesos(valor) {
+
+      return valor.toLocaleString("es-CO", {
+        style: "currency",
+        currency: "COP",
+        minimumFractionDigits: 0
+      });
+
+    }
+
+
+    /* ==============================
+       FILTROS
+    ================================ */
+
+    function llenarFiltroSelecciones() {
+
+      const selecciones =
+        [...new Set(productos.map(p => p.seleccion))];
+
+      selecciones.forEach(sel => {
+
+        const opcion = document.createElement("option");
+
+        opcion.value = sel;
+        opcion.textContent = sel;
+
+        filtroSeleccion.appendChild(opcion);
+
+      });
+
+    }
+
+    function cambiarTipo(tipo, boton) {
+
+      filtroTipo = tipo;
+
+      document
+        .querySelectorAll(".filtros button")
+        .forEach(b => b.classList.remove("activo"));
+
+      boton.classList.add("activo");
+
+      mostrarProductos();
+
+    }
+
+
+    /* ==============================
+       MOSTRAR PRODUCTOS
+    ================================ */
+
+    function mostrarProductos() {
+
+      contenedorProductos.innerHTML = "";
+
+      const seleccion = filtroSeleccion.value;
+
+      const lista = productos.filter(prod =>
+        (filtroTipo === "todos" || prod.tipo === filtroTipo) &&
+        (seleccion === "todas" || prod.seleccion === seleccion)
+      );
+
+      if (lista.length === 0) {
+
+        contenedorProductos.innerHTML =
+          '<p class="vacio">No hay productos con ese filtro.</p>';
+
+        return;
+
+      }
+
+      lista.forEach(prod => {
+
+        const div = document.createElement("div");
+
+        div.className = "producto";
+
+        const icono = prod.tipo === "camiseta" ? "👕" : "🧢";
+
+        const imagenHTML = prod.imagen
+          ? `<img src="${prod.imagen}" alt="${prod.nombre}">`
+          : `<div class="sin-imagen">${icono}</div>`;
+
+        const tallaHTML = prod.tipo === "camiseta"
+          ? `<select id="talla-${prod.id}">
+               ${TALLAS.map(t => `<option value="${t}">Talla ${t}</option>`).join("")}
+             </select>`
+          : `<p class="talla-unica">Talla única ajustable</p>`;
+
+        div.innerHTML = `
+          ${imagenHTML}
+
+          <div class="info">
+
+            <span class="etiqueta">
+              ${prod.tipo === "camiseta" ? "Camiseta" : "Gorra"} · ${prod.seleccion}
+            </span>
+
+            <h3>${prod.nombre}</h3>
+
+            <p class="descripcion">
+              ${prod.descripcion}
+            </p>
+
+            <p class="precio">
+              ${formatoPesos(prod.precio)}
+            </p>
+
+            ${tallaHTML}
+
+            <button onclick="agregarAlCarrito(${prod.id})">
+              🛒 Agregar al carrito
+            </button>
+
+          </div>
+        `;
+
+        contenedorProductos.appendChild(div);
+
+      });
+
+    }
+
+
+    /* ==============================
+       AGREGAR AL CARRITO
+    ================================ */
+
+    function agregarAlCarrito(id) {
+
+      const selectTalla =
+        document.getElementById(`talla-${id}`);
+
+      const talla =
+        selectTalla ? selectTalla.value : "Única";
+
+      const productoExistente =
+        carrito.find(p => p.id === id && p.talla === talla);
+
+      if (productoExistente) {
+
+        productoExistente.cantidad++;
+
+      } else {
+
+        const producto =
+          productos.find(p => p.id === id);
+
+        carrito.push({
+          ...producto,
+          talla: talla,
+          cantidad: 1
+        });
+
+      }
+
+      actualizarCarrito();
+
+    }
+
+
+    /* ==============================
+       CAMBIAR CANTIDAD / ELIMINAR
+    ================================ */
+
+    function cambiarCantidad(indice, cambio) {
+
+      carrito[indice].cantidad += cambio;
+
+      if (carrito[indice].cantidad <= 0) {
+
+        carrito.splice(indice, 1);
+
+      }
+
+      actualizarCarrito();
+
+    }
+
+    function eliminarDelCarrito(indice) {
+
+      carrito.splice(indice, 1);
+
+      actualizarCarrito();
+
+    }
+
+
+    /* ==============================
+       ACTUALIZAR CARRITO
+    ================================ */
+
+    function actualizarCarrito() {
+
+      listaCarrito.innerHTML = "";
+
+      let total = 0;
+      let totalItems = 0;
+
+      if (carrito.length === 0) {
+
+        listaCarrito.innerHTML =
+          '<li class="vacio">Tu carrito está vacío ⚽</li>';
+
+      }
+
+      carrito.forEach((item, indice) => {
+
+        const li = document.createElement("li");
+
+        const subtotal = item.precio * item.cantidad;
+
+        li.innerHTML = `
+          <div class="item-fila">
+            <div>
+              <div class="item-nombre">${item.nombre}</div>
+              <div class="item-talla">Talla: ${item.talla}</div>
+            </div>
+
+            <button class="eliminar" onclick="eliminarDelCarrito(${indice})" title="Eliminar">
+              ❌
+            </button>
+          </div>
+
+          <div class="item-fila">
+            <div class="cantidad">
+              <button onclick="cambiarCantidad(${indice}, -1)">−</button>
+              <span>${item.cantidad}</span>
+              <button onclick="cambiarCantidad(${indice}, 1)">+</button>
+            </div>
+
+            <strong>${formatoPesos(subtotal)}</strong>
+          </div>
+        `;
+
+        listaCarrito.appendChild(li);
+
+        total += subtotal;
+        totalItems += item.cantidad;
+
+      });
+
+      totalCarrito.textContent =
+        total.toLocaleString("es-CO");
+
+      actualizarTituloCarrito(totalItems);
+
+    }
+
+
+    /* ==============================
+       CONTADOR DEL CARRITO
+    ================================ */
+
+    function actualizarTituloCarrito(cantidad) {
+
+      contadorCarrito.textContent = cantidad;
+
+    }
+
+
+    /* ==============================
+       VACIAR CARRITO
+    ================================ */
+
+    function vaciarCarrito() {
+
+      if (carrito.length === 0) {
+
+        alert("🛒 El carrito ya está vacío.");
+
+        return;
+
+      }
+
+      if (
+        confirm(
+          "¿Estás seguro de que quieres vaciar el carrito?"
+        )
+      ) {
+
+        carrito.length = 0;
+
+        actualizarCarrito();
+
+      }
+
+    }
+
+
+    /* ==============================
+       FINALIZAR COMPRA
+    ================================ */
+
+    function finalizarCompra() {
+
+      if (carrito.length === 0) {
+
+        alert(
+          "🛒 Tu carrito está vacío. Agrega una camiseta o una gorra antes de finalizar la compra."
+        );
+
+        return;
+
+      }
+
+      const total =
+        carrito.reduce((suma, item) => suma + item.precio * item.cantidad, 0);
+
+      alert(
+        "🎉 ¡Pedido simulado confirmado!\n\n" +
+        `Total: ${formatoPesos(total)}\n\n` +
+        "En un eCommerce real, ahora entrarían en acción " +
+        "el backend, la pasarela de pago y la logística."
+      );
+
+      carrito.length = 0;
+
+      actualizarCarrito();
+
+    }
+
+
+    /* ==============================
+       INICIAR TIENDA
+    ================================ */
+
+    llenarFiltroSelecciones();
+
+    mostrarProductos();
+
+    actualizarCarrito();
+  </script>
+</body>
+</html>
