@@ -1,0 +1,905 @@
+/* ==========================================================
+   Harvey Sanabria – Gorras y Camisetas de Selecciones
+   js/script.js
+
+   Para agregar un producto nuevo, solo añade un objeto al
+   arreglo "productos" con la misma estructura. Los filtros,
+   las selecciones y los destacados se actualizan solos.
+   ========================================================== */
+"use strict";
+
+/* ==========================================================
+   PRODUCTOS
+   Campos de cada producto:
+   - id:          identificador único, sin espacios
+   - nombre:      nombre que se ve en la tarjeta
+   - tipo:        "camiseta" o "gorra"
+   - seleccion:   nombre de la selección (crea su filtro automáticamente)
+   - descripcion: texto corto de la tarjeta
+   - precio:      número en pesos colombianos, sin puntos (ej: 129900)
+   - imagen:      ruta o link de tu foto (ej: "img/camiseta-colombia.jpg").
+                  Si lo dejas vacío "" se muestra el recuadro con 👕 o 🧢
+   - destacado:   true para que aparezca en "Los favoritos de la hinchada"
+   ========================================================== */
+const productos = [
+  {
+    id: "camiseta-colombia-local",
+    nombre: "Camiseta Colombia Local",
+    tipo: "camiseta",
+    seleccion: "Colombia",
+    descripcion: "La amarilla de toda la vida. Liviana y fresca para alentar a la Tricolor en el estadio o en la casa.",
+    precio: 129900,
+    imagen: "",
+    destacado: true
+  },
+  {
+    id: "camiseta-colombia-visitante",
+    nombre: "Camiseta Colombia Visitante",
+    tipo: "camiseta",
+    seleccion: "Colombia",
+    descripcion: "La azul para los partidos fuera de casa. Cómoda y lista para el próximo partido.",
+    precio: 129900,
+    imagen: "",
+    destacado: false
+  },
+  {
+    id: "gorra-colombia",
+    nombre: "Gorra Colombia",
+    tipo: "gorra",
+    seleccion: "Colombia",
+    descripcion: "Amarilla con detalles en azul y rojo. Cierre ajustable atrás.",
+    precio: 49900,
+    imagen: "",
+    destacado: true
+  },
+  {
+    id: "camiseta-argentina-local",
+    nombre: "Camiseta Argentina Local",
+    tipo: "camiseta",
+    seleccion: "Argentina",
+    descripcion: "Las clásicas rayas celeste y blanco para los que siguen a la Albiceleste.",
+    precio: 119900,
+    imagen: "",
+    destacado: true
+  },
+  {
+    id: "gorra-argentina",
+    nombre: "Gorra Argentina",
+    tipo: "gorra",
+    seleccion: "Argentina",
+    descripcion: "Celeste y blanca, con cierre ajustable para el sol del partido.",
+    precio: 45900,
+    imagen: "",
+    destacado: false
+  },
+  {
+    id: "camiseta-brasil-local",
+    nombre: "Camiseta Brasil Local",
+    tipo: "camiseta",
+    seleccion: "Brasil",
+    descripcion: "La verdeamarela de siempre, fresca y cómoda para jugar o para alentar.",
+    precio: 119900,
+    imagen: "",
+    destacado: true
+  },
+  {
+    id: "gorra-brasil",
+    nombre: "Gorra Brasil",
+    tipo: "gorra",
+    seleccion: "Brasil",
+    descripcion: "Verde con visera amarilla. Talla única ajustable.",
+    precio: 45900,
+    imagen: "",
+    destacado: false
+  },
+  {
+    id: "camiseta-espana-local",
+    nombre: "Camiseta España Local",
+    tipo: "camiseta",
+    seleccion: "España",
+    descripcion: "Roja con detalles amarillos, para los seguidores de la Roja.",
+    precio: 114900,
+    imagen: "",
+    destacado: false
+  },
+  {
+    id: "camiseta-mexico-local",
+    nombre: "Camiseta México Local",
+    tipo: "camiseta",
+    seleccion: "México",
+    descripcion: "Verde y con todo el sabor del Tri. Tela liviana de secado rápido.",
+    precio: 109900,
+    imagen: "",
+    destacado: false
+  },
+  {
+    id: "gorra-mexico",
+    nombre: "Gorra México",
+    tipo: "gorra",
+    seleccion: "México",
+    descripcion: "Verde con detalles en blanco y rojo, cierre ajustable atrás.",
+    precio: 45900,
+    imagen: "",
+    destacado: false
+  },
+  {
+    id: "camiseta-francia-local",
+    nombre: "Camiseta Francia Local",
+    tipo: "camiseta",
+    seleccion: "Francia",
+    descripcion: "Azul oscuro, sobria y elegante, para los fans de los Bleus.",
+    precio: 114900,
+    imagen: "",
+    destacado: false
+  },
+  {
+    id: "camiseta-alemania-local",
+    nombre: "Camiseta Alemania Local",
+    tipo: "camiseta",
+    seleccion: "Alemania",
+    descripcion: "Blanca con detalles en negro: un clásico de la Mannschaft.",
+    precio: 114900,
+    imagen: "",
+    destacado: false
+  }
+];
+
+/* ==========================================================
+   TESTIMONIOS
+   Agrega aquí SOLO opiniones reales de tus clientes (con su
+   permiso). Mientras el arreglo esté vacío, la sección muestra
+   una invitación a dejar su opinión.
+   Ejemplo de estructura:
+   { nombre: "Nombre del cliente", ciudad: "Bogotá", texto: "Lo que te escribió." },
+   ========================================================== */
+const testimonios = [];
+
+/* ==========================================================
+   CONFIGURACIÓN Y UTILIDADES
+   ========================================================== */
+const TALLAS_CAMISETA = ["S", "M", "L", "XL", "XXL"];
+const TALLA_UNICA = "Única";
+const SELECCION_PRINCIPAL = "Colombia";
+
+const $ = (selector, contexto = document) => contexto.querySelector(selector);
+const $$ = (selector, contexto = document) => Array.from(contexto.querySelectorAll(selector));
+
+const prefiereMenosMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function escaparHTML(texto) {
+  const reemplazos = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  return String(texto).replace(/[&<>"']/g, (c) => reemplazos[c]);
+}
+
+function iconoProducto(tipo) {
+  return tipo === "gorra" ? "🧢" : "👕";
+}
+
+function nombreTipo(tipo) {
+  return tipo === "gorra" ? "Gorra" : "Camiseta";
+}
+
+function plural(cantidad, singular, pluralTexto) {
+  return `${cantidad} ${cantidad === 1 ? singular : pluralTexto}`;
+}
+
+/* Crea la imagen de un producto. Si falla al cargar, se quita
+   y queda visible el recuadro de respaldo (👕 / 🧢). */
+function crearImagen(src, alt) {
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = alt;
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.width = 600;
+  img.height = 600;
+  img.addEventListener("error", () => img.remove());
+  return img;
+}
+
+/* ==========================================================
+   CARRITO
+   Cada elemento: { id, talla, cantidad }.
+   Se guarda en el navegador para no perderlo al recargar.
+   ========================================================== */
+const CLAVE_CARRITO = "harveySanabriaCarrito";
+let carrito = cargarCarrito();
+
+function buscarProducto(id) {
+  return productos.find((producto) => producto.id === id);
+}
+
+function cargarCarrito() {
+  try {
+    const guardado = JSON.parse(localStorage.getItem(CLAVE_CARRITO));
+    if (!Array.isArray(guardado)) return [];
+    return guardado.filter((item) =>
+      buscarProducto(item.id) && Number.isInteger(item.cantidad) && item.cantidad > 0
+    );
+  } catch (error) {
+    return [];
+  }
+}
+
+function guardarCarrito() {
+  try {
+    localStorage.setItem(CLAVE_CARRITO, JSON.stringify(carrito));
+  } catch (error) {
+    /* Si el navegador no permite guardar, el carrito sigue funcionando en esta visita. */
+  }
+}
+
+/* ==========================================================
+   FORMATO DE PRECIOS
+   ========================================================== */
+const formatoCOP = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+});
+
+function formatearPrecio(valor) {
+  return formatoCOP.format(valor);
+}
+
+/* ==========================================================
+   FILTROS
+   ========================================================== */
+const filtros = { tipo: "todos", seleccion: "todas" };
+
+/* Lista de selecciones sin repetir, con Colombia de primera. */
+function obtenerSelecciones() {
+  const unicas = [...new Set(productos.map((producto) => producto.seleccion))];
+  return unicas.sort((a, b) => {
+    if (a === SELECCION_PRINCIPAL) return -1;
+    if (b === SELECCION_PRINCIPAL) return 1;
+    return a.localeCompare(b, "es");
+  });
+}
+
+function llenarFiltroSelecciones() {
+  const select = $("#filtro-seleccion");
+  obtenerSelecciones().forEach((seleccion) => select.add(new Option(seleccion, seleccion)));
+}
+
+function productosFiltrados() {
+  return productos.filter((producto) =>
+    (filtros.tipo === "todos" || producto.tipo === filtros.tipo) &&
+    (filtros.seleccion === "todas" || producto.seleccion === filtros.seleccion)
+  );
+}
+
+function aplicarFiltros(cambios = {}) {
+  Object.assign(filtros, cambios);
+  $$("[data-filtro-tipo]").forEach((boton) => {
+    boton.setAttribute("aria-pressed", String(boton.dataset.filtroTipo === filtros.tipo));
+  });
+  $("#filtro-seleccion").value = filtros.seleccion;
+  mostrarProductos();
+}
+
+/* Usado por los botones del hero, las selecciones y la promoción. */
+function irAlCatalogo(cambios) {
+  aplicarFiltros(cambios);
+  cerrarMenu();
+  $("#catalogo").scrollIntoView({ behavior: prefiereMenosMovimiento ? "auto" : "smooth" });
+}
+
+/* ==========================================================
+   MOSTRAR PRODUCTOS
+   ========================================================== */
+function crearTarjeta(producto) {
+  const esCamiseta = producto.tipo === "camiseta";
+  const nombre = escaparHTML(producto.nombre);
+
+  const selectorTalla = esCamiseta
+    ? `<label class="tarjeta__talla">
+         <span>Talla</span>
+         <select class="campo-select" data-talla>
+           ${TALLAS_CAMISETA.map((talla) => `<option value="${talla}"${talla === "M" ? " selected" : ""}>${talla}</option>`).join("")}
+         </select>
+       </label>`
+    : `<p class="tarjeta__talla-unica"><span aria-hidden="true">✔</span> Talla única ajustable</p>`;
+
+  const tarjeta = document.createElement("article");
+  tarjeta.className = "tarjeta";
+  tarjeta.innerHTML = `
+    <div class="tarjeta__media">
+      <div class="tarjeta__respaldo" aria-hidden="true">${iconoProducto(producto.tipo)}</div>
+      ${producto.destacado ? '<span class="badge">Destacado</span>' : ""}
+    </div>
+    <div class="tarjeta__cuerpo">
+      <div class="tarjeta__etiquetas">
+        <span class="etiqueta">${nombreTipo(producto.tipo)}</span>
+        <span class="etiqueta etiqueta--azul">${escaparHTML(producto.seleccion)}</span>
+      </div>
+      <h3 class="tarjeta__nombre">${nombre}</h3>
+      <p class="tarjeta__desc">${escaparHTML(producto.descripcion)}</p>
+      <p class="tarjeta__precio">${formatearPrecio(producto.precio)}</p>
+      ${selectorTalla}
+      <button type="button" class="btn btn--azul btn--bloque" data-agregar="${escaparHTML(producto.id)}" aria-label="Agregar ${nombre} al carrito">
+        Agregar al carrito
+      </button>
+    </div>`;
+
+  if (producto.imagen) {
+    $(".tarjeta__media", tarjeta).append(crearImagen(producto.imagen, producto.nombre));
+  }
+  return tarjeta;
+}
+
+function renderizarLista(contenedor, lista) {
+  contenedor.replaceChildren(...lista.map(crearTarjeta));
+}
+
+function mostrarProductos() {
+  const lista = productosFiltrados();
+  renderizarLista($("#grid-productos"), lista);
+  $("#catalogo-vacio").hidden = lista.length > 0;
+  $("#resultado-filtros").textContent = `Mostrando ${plural(lista.length, "producto", "productos")}`;
+}
+
+/* Destacados: primero los de Colombia. */
+function mostrarDestacados() {
+  const lista = productos
+    .filter((producto) => producto.destacado)
+    .sort((a, b) => (b.seleccion === SELECCION_PRINCIPAL) - (a.seleccion === SELECCION_PRINCIPAL));
+  renderizarLista($("#grid-destacados"), lista);
+  $("#destacados").hidden = lista.length === 0;
+}
+
+function mostrarSelecciones() {
+  const elementos = obtenerSelecciones().map((seleccion) => {
+    const cantidad = productos.filter((producto) => producto.seleccion === seleccion).length;
+    const nombre = escaparHTML(seleccion);
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <button type="button" class="seleccion-chip${seleccion === SELECCION_PRINCIPAL ? " seleccion-chip--principal" : ""}"
+              data-ir-seleccion="${nombre}" aria-label="Ver productos de ${nombre}">
+        ${nombre}
+        <small>${plural(cantidad, "producto", "productos")}</small>
+      </button>`;
+    return li;
+  });
+  $("#lista-selecciones").replaceChildren(...elementos);
+}
+
+function mostrarTestimonios() {
+  const contenedor = $("#lista-testimonios");
+  const hayTestimonios = testimonios.length > 0;
+  contenedor.hidden = !hayTestimonios;
+  $("#testimonios-vacio").hidden = hayTestimonios;
+  if (!hayTestimonios) return;
+
+  contenedor.replaceChildren(...testimonios.map((testimonio) => {
+    const figura = document.createElement("figure");
+    figura.className = "testimonio";
+    figura.innerHTML = `
+      <blockquote>${escaparHTML(testimonio.texto)}</blockquote>
+      <figcaption><strong>${escaparHTML(testimonio.nombre)}</strong>${testimonio.ciudad ? ` · ${escaparHTML(testimonio.ciudad)}` : ""}</figcaption>`;
+    return figura;
+  }));
+}
+
+/* ==========================================================
+   AGREGAR AL CARRITO
+   ========================================================== */
+function agregarAlCarrito(id, talla) {
+  const producto = buscarProducto(id);
+  if (!producto) return;
+
+  const tallaFinal = producto.tipo === "camiseta" ? talla : TALLA_UNICA;
+  const existente = carrito.find((item) => item.id === id && item.talla === tallaFinal);
+
+  if (existente) {
+    existente.cantidad += 1;
+  } else {
+    carrito.push({ id, talla: tallaFinal, cantidad: 1 });
+  }
+
+  actualizarCarrito(true);
+  mostrarToast(`✔ ${producto.nombre} (talla ${tallaFinal}) agregado al carrito`);
+}
+
+/* ==========================================================
+   CAMBIAR CANTIDAD / ELIMINAR
+   ========================================================== */
+function cambiarCantidad(indice, cambio) {
+  const item = carrito[indice];
+  if (!item) return;
+  const producto = buscarProducto(item.id);
+
+  item.cantidad += cambio;
+  if (item.cantidad <= 0) {
+    carrito.splice(indice, 1);
+    anunciar(`${producto.nombre} eliminado del carrito`);
+  } else {
+    anunciar(`${producto.nombre}: ${plural(item.cantidad, "unidad", "unidades")}`);
+  }
+  actualizarCarrito();
+}
+
+function eliminarDelCarrito(indice) {
+  const item = carrito[indice];
+  if (!item) return;
+  carrito.splice(indice, 1);
+  anunciar(`${buscarProducto(item.id).nombre} eliminado del carrito`);
+  actualizarCarrito();
+}
+
+/* Maneja los botones +, − y Eliminar del panel, y devuelve el foco
+   a un lugar lógico para quien navega con teclado. */
+function manejarAccionCarrito(boton) {
+  const indice = Number(boton.dataset.indice);
+  const accion = boton.dataset.accion;
+
+  if (accion === "sumar") cambiarCantidad(indice, 1);
+  else if (accion === "restar") cambiarCantidad(indice, -1);
+  else if (accion === "eliminar") eliminarDelCarrito(indice);
+
+  const siguiente = $(`[data-accion="${accion}"][data-indice="${indice}"]`, $("#carrito-items"));
+  (siguiente || $("#cerrar-carrito")).focus();
+}
+
+/* ==========================================================
+   ACTUALIZAR CARRITO
+   ========================================================== */
+function contarUnidades() {
+  return carrito.reduce((total, item) => total + item.cantidad, 0);
+}
+
+function calcularTotal() {
+  return carrito.reduce((total, item) => total + buscarProducto(item.id).precio * item.cantidad, 0);
+}
+
+function crearItemCarrito(item, indice) {
+  const producto = buscarProducto(item.id);
+  const nombre = escaparHTML(producto.nombre);
+  const talla = escaparHTML(item.talla);
+
+  const li = document.createElement("li");
+  li.className = "item";
+  li.innerHTML = `
+    <div class="item__media" aria-hidden="true">${iconoProducto(producto.tipo)}</div>
+    <div class="item__info">
+      <p class="item__nombre">${nombre}</p>
+      <p class="item__detalle">Talla: ${talla} · ${formatearPrecio(producto.precio)} c/u</p>
+      <div class="item__fila">
+        <div class="cantidad" role="group" aria-label="Cantidad de ${nombre}, talla ${talla}">
+          <button type="button" data-accion="restar" data-indice="${indice}" aria-label="Quitar una unidad de ${nombre}">−</button>
+          <span class="cantidad__valor">${item.cantidad}</span>
+          <button type="button" data-accion="sumar" data-indice="${indice}" aria-label="Agregar una unidad de ${nombre}">+</button>
+        </div>
+        <span class="item__subtotal">${formatearPrecio(producto.precio * item.cantidad)}</span>
+      </div>
+      <button type="button" class="item__eliminar" data-accion="eliminar" data-indice="${indice}" aria-label="Eliminar ${nombre} talla ${talla} del carrito">Eliminar</button>
+    </div>`;
+
+  if (producto.imagen) {
+    const media = $(".item__media", li);
+    const img = crearImagen(producto.imagen, "");
+    img.width = 68;
+    img.height = 68;
+    img.addEventListener("load", () => { media.textContent = ""; media.append(img); });
+  }
+  return li;
+}
+
+function actualizarCarrito(animarContador = false) {
+  guardarCarrito();
+
+  const vacio = carrito.length === 0;
+  const lista = $("#carrito-items");
+  lista.replaceChildren(...carrito.map(crearItemCarrito));
+  lista.hidden = vacio;
+  $("#carrito-vacio").hidden = !vacio;
+
+  const total = calcularTotal();
+  $("#carrito-subtotal").textContent = formatearPrecio(total);
+  $("#carrito-total").textContent = formatearPrecio(total);
+  $("#btn-finalizar").disabled = vacio;
+  $("#btn-vaciar").disabled = vacio;
+
+  actualizarContador(animarContador);
+}
+
+/* ==========================================================
+   CONTADOR DEL CARRITO
+   ========================================================== */
+function actualizarContador(animar = false) {
+  const unidades = contarUnidades();
+  const contador = $("#contador-carrito");
+
+  contador.textContent = unidades > 99 ? "99+" : unidades;
+  contador.classList.toggle("carrito-btn__contador--vacio", unidades === 0);
+  $("#abrir-carrito").setAttribute("aria-label", `Abrir carrito, ${plural(unidades, "unidad", "unidades")}`);
+  $("#carrito-unidades").textContent = `(${unidades})`;
+
+  if (animar) {
+    contador.classList.remove("contador--pulso");
+    void contador.offsetWidth; /* reinicia la animación */
+    contador.classList.add("contador--pulso");
+  }
+}
+
+/* ==========================================================
+   VACIAR CARRITO
+   ========================================================== */
+function vaciarCarrito() {
+  if (carrito.length === 0) return;
+  const confirmado = window.confirm("¿Seguro que quieres vaciar el carrito? Se eliminarán todos los productos.");
+  if (!confirmado) return;
+
+  carrito = [];
+  actualizarCarrito();
+  mostrarToast("Carrito vacío. ¡Vuelve cuando quieras!");
+  $("#cerrar-carrito").focus();
+}
+
+/* ==========================================================
+   FINALIZAR COMPRA (simulada)
+   ========================================================== */
+function finalizarCompra() {
+  if (carrito.length === 0) {
+    mostrarToast("Tu carrito está vacío");
+    return;
+  }
+
+  const lineas = carrito.map((item) => {
+    const producto = buscarProducto(item.id);
+    return `<li>
+      <span>${item.cantidad} × ${escaparHTML(producto.nombre)} <small>(Talla ${escaparHTML(item.talla)})</small></span>
+      <strong>${formatearPrecio(producto.precio * item.cantidad)}</strong>
+    </li>`;
+  }).join("");
+
+  abrirModal(`
+    <h2 class="modal__titulo" id="modal-titulo" tabindex="-1">Resumen de tu pedido</h2>
+    <p class="modal__texto">Revisa que todo esté bien antes de confirmar.</p>
+    <ul class="resumen">${lineas}</ul>
+    <p class="carrito__linea"><span>Envío en Bogotá</span><strong class="envio-gratis">Gratis</strong></p>
+    <p class="carrito__linea carrito__linea--total"><span>Total a pagar</span><strong>${formatearPrecio(calcularTotal())}</strong></p>
+    <div class="modal__botones">
+      <button type="button" class="btn btn--fantasma" data-cerrar-modal>Seguir comprando</button>
+      <button type="button" class="btn btn--rojo" data-confirmar-compra>Confirmar compra</button>
+    </div>`);
+}
+
+function confirmarCompra() {
+  const total = calcularTotal();
+  const unidades = contarUnidades();
+  const numeroPedido = `HS-${Date.now().toString().slice(-6)}`;
+
+  carrito = [];
+  actualizarCarrito();
+  cerrarCarrito(false);
+
+  abrirModal(`
+    <p class="modal__icono" aria-hidden="true">🎉</p>
+    <h2 class="modal__titulo" id="modal-titulo" tabindex="-1">¡Pedido confirmado!</h2>
+    <p>Tu número de pedido es <span class="pedido-numero">${numeroPedido}</span>.</p>
+    <p>Compraste ${plural(unidades, "producto", "productos")} por un total de <strong>${formatearPrecio(total)}</strong>, con envío gratis en Bogotá.</p>
+    <p class="modal__texto"><small>Esta es una compra de demostración: no se realizó ningún cobro.</small></p>
+    <div class="modal__botones">
+      <button type="button" class="btn btn--azul" data-cerrar-modal>Volver a la tienda</button>
+    </div>`);
+}
+
+/* ==========================================================
+   PANEL DEL CARRITO (abrir / cerrar)
+   ========================================================== */
+function carritoAbierto() {
+  return $("#carrito").classList.contains("abierto");
+}
+
+function modalAbierto() {
+  return $("#modal-compra").classList.contains("abierto");
+}
+
+function actualizarBloqueoScroll() {
+  document.body.classList.toggle("sin-scroll", carritoAbierto() || modalAbierto());
+}
+
+function abrirCarrito() {
+  const panel = $("#carrito");
+  cerrarMenu();
+  panel.classList.add("abierto");
+  panel.removeAttribute("inert");
+  panel.setAttribute("aria-hidden", "false");
+  $("#overlay").classList.add("visible");
+  $("#abrir-carrito").setAttribute("aria-expanded", "true");
+  actualizarBloqueoScroll();
+  $("#cerrar-carrito").focus();
+}
+
+function cerrarCarrito(devolverFoco = true) {
+  const panel = $("#carrito");
+  if (!carritoAbierto()) return;
+  panel.classList.remove("abierto");
+  panel.setAttribute("inert", "");
+  panel.setAttribute("aria-hidden", "true");
+  $("#overlay").classList.remove("visible");
+  $("#abrir-carrito").setAttribute("aria-expanded", "false");
+  actualizarBloqueoScroll();
+  if (devolverFoco) $("#abrir-carrito").focus();
+}
+
+/* ==========================================================
+   MODAL
+   ========================================================== */
+function abrirModal(contenidoHTML) {
+  const modal = $("#modal-compra");
+  $("#modal-contenido").innerHTML = contenidoHTML;
+  modal.classList.add("abierto");
+  modal.removeAttribute("inert");
+  modal.setAttribute("aria-hidden", "false");
+  actualizarBloqueoScroll();
+  $("#modal-titulo").focus();
+}
+
+function cerrarModal() {
+  const modal = $("#modal-compra");
+  if (!modalAbierto()) return;
+  modal.classList.remove("abierto");
+  modal.setAttribute("inert", "");
+  modal.setAttribute("aria-hidden", "true");
+  actualizarBloqueoScroll();
+  (carritoAbierto() ? $("#btn-finalizar") : $("#abrir-carrito")).focus();
+}
+
+/* Mantiene el foco del teclado dentro del panel o del modal abierto. */
+function atraparFoco(evento, contenedor) {
+  const enfocables = $$('a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])', contenedor)
+    .filter((el) => el.getClientRects().length > 0);
+  if (enfocables.length === 0) return;
+
+  const primero = enfocables[0];
+  const ultimo = enfocables[enfocables.length - 1];
+
+  if (!contenedor.contains(document.activeElement)) {
+    evento.preventDefault();
+    primero.focus();
+  } else if (evento.shiftKey && (document.activeElement === primero || !enfocables.includes(document.activeElement))) {
+    evento.preventDefault();
+    ultimo.focus();
+  } else if (!evento.shiftKey && document.activeElement === ultimo) {
+    evento.preventDefault();
+    primero.focus();
+  }
+}
+
+/* ==========================================================
+   MENÚ (hamburguesa en celulares)
+   ========================================================== */
+function abrirMenu() {
+  $("#menu-principal").classList.add("abierto");
+  $("#menu-btn").setAttribute("aria-expanded", "true");
+  $("#menu-btn").setAttribute("aria-label", "Cerrar menú");
+}
+
+function cerrarMenu() {
+  $("#menu-principal").classList.remove("abierto");
+  $("#menu-btn").setAttribute("aria-expanded", "false");
+  $("#menu-btn").setAttribute("aria-label", "Abrir menú");
+}
+
+function menuAbierto() {
+  return $("#menu-principal").classList.contains("abierto");
+}
+
+/* Marca en el menú la sección que se está viendo. */
+function iniciarNavActiva() {
+  if (!("IntersectionObserver" in window)) return;
+  const enlaces = $$(".nav__link");
+
+  const observador = new IntersectionObserver((entradas) => {
+    entradas.forEach((entrada) => {
+      if (!entrada.isIntersecting) return;
+      enlaces.forEach((enlace) => {
+        const activo = enlace.getAttribute("href") === `#${entrada.target.id}`;
+        enlace.classList.toggle("activo", activo);
+        if (activo) enlace.setAttribute("aria-current", "true");
+        else enlace.removeAttribute("aria-current");
+      });
+    });
+  }, { rootMargin: "-45% 0px -50% 0px" });
+
+  enlaces.forEach((enlace) => {
+    const seccion = document.querySelector(enlace.getAttribute("href"));
+    if (seccion) observador.observe(seccion);
+  });
+}
+
+/* ==========================================================
+   AVISOS (toast y lector de pantalla)
+   ========================================================== */
+let temporizadorToast;
+
+function mostrarToast(mensaje) {
+  const toast = $("#toast");
+  toast.textContent = mensaje;
+  toast.classList.add("visible");
+  clearTimeout(temporizadorToast);
+  temporizadorToast = setTimeout(() => toast.classList.remove("visible"), 2600);
+}
+
+function anunciar(mensaje) {
+  const region = $("#anuncio");
+  region.textContent = "";
+  setTimeout(() => { region.textContent = mensaje; }, 50);
+}
+
+/* ==========================================================
+   ACORDEÓN DE PREGUNTAS FRECUENTES
+   ========================================================== */
+function iniciarAcordeon() {
+  $$(".faq__boton").forEach((boton) => {
+    boton.addEventListener("click", () => {
+      const abierto = boton.getAttribute("aria-expanded") === "true";
+      boton.setAttribute("aria-expanded", String(!abierto));
+      document.getElementById(boton.getAttribute("aria-controls")).hidden = abierto;
+    });
+  });
+}
+
+/* ==========================================================
+   IMAGEN DEL HERO
+   Se toma del atributo data-imagen en index.html.
+   ========================================================== */
+function cargarImagenHero() {
+  const media = $("#hero-media");
+  const src = (media.dataset.imagen || "").trim();
+  if (!src) return;
+
+  const img = crearImagen(src, media.dataset.alt || "");
+  img.loading = "eager";
+  img.fetchPriority = "high";
+  img.width = 1200;
+  img.height = 900;
+  media.append(img);
+}
+
+/* ==========================================================
+   ANIMACIONES SUAVES AL HACER SCROLL
+   Solo se animan los elementos que aún no están en pantalla.
+   ========================================================== */
+function iniciarAnimaciones() {
+  if (prefiereMenosMovimiento || !("IntersectionObserver" in window)) return;
+
+  const observador = new IntersectionObserver((entradas) => {
+    entradas.forEach((entrada) => {
+      if (entrada.isIntersecting) {
+        entrada.target.classList.add("visible");
+        observador.unobserve(entrada.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  $$(".seccion__cabecera, .beneficio, .promo__caja, .seleccion-chip, .calidad__item, .tabla-contenedor, .tallas__ayuda, .faq__item")
+    .forEach((elemento) => {
+      if (elemento.getBoundingClientRect().top > window.innerHeight) {
+        elemento.classList.add("revelar");
+        observador.observe(elemento);
+      }
+    });
+}
+
+/* ==========================================================
+   EVENTOS
+   Un solo "escuchador" de clics maneja todos los botones,
+   incluidos los que se crean después (tarjetas, carrito, modal).
+   ========================================================== */
+function registrarEventos() {
+  document.addEventListener("click", (evento) => {
+    const objetivo = evento.target;
+
+    const botonAgregar = objetivo.closest("[data-agregar]");
+    if (botonAgregar) {
+      const selectTalla = $("[data-talla]", botonAgregar.closest(".tarjeta"));
+      agregarAlCarrito(botonAgregar.dataset.agregar, selectTalla ? selectTalla.value : TALLA_UNICA);
+      return;
+    }
+
+    const botonFiltro = objetivo.closest("[data-filtro-tipo]");
+    if (botonFiltro) {
+      aplicarFiltros({ tipo: botonFiltro.dataset.filtroTipo });
+      return;
+    }
+
+    const botonTipo = objetivo.closest("[data-ir-tipo]");
+    if (botonTipo) {
+      irAlCatalogo({ tipo: botonTipo.dataset.irTipo, seleccion: "todas" });
+      return;
+    }
+
+    const botonSeleccion = objetivo.closest("[data-ir-seleccion]");
+    if (botonSeleccion) {
+      irAlCatalogo({ tipo: "todos", seleccion: botonSeleccion.dataset.irSeleccion });
+      return;
+    }
+
+    if (objetivo.closest("[data-limpiar-filtros]")) {
+      aplicarFiltros({ tipo: "todos", seleccion: "todas" });
+      return;
+    }
+
+    const botonCarrito = objetivo.closest("[data-accion]");
+    if (botonCarrito) {
+      manejarAccionCarrito(botonCarrito);
+      return;
+    }
+
+    if (objetivo.closest("[data-confirmar-compra]")) {
+      confirmarCompra();
+      return;
+    }
+
+    if (objetivo.closest("[data-cerrar-modal]")) {
+      cerrarModal();
+      return;
+    }
+
+    /* Cerrar el menú del celular al tocar fuera del header */
+    if (menuAbierto() && !objetivo.closest(".header")) cerrarMenu();
+  });
+
+  $("#filtro-seleccion").addEventListener("change", (evento) => {
+    aplicarFiltros({ seleccion: evento.target.value });
+  });
+
+  /* Menú */
+  $("#menu-btn").addEventListener("click", () => (menuAbierto() ? cerrarMenu() : abrirMenu()));
+  $$("#menu-principal a").forEach((enlace) => enlace.addEventListener("click", cerrarMenu));
+  window.matchMedia("(min-width: 960px)").addEventListener("change", cerrarMenu);
+
+  /* Carrito */
+  $("#abrir-carrito").addEventListener("click", abrirCarrito);
+  $("#cerrar-carrito").addEventListener("click", () => cerrarCarrito());
+  $("#overlay").addEventListener("click", () => cerrarCarrito());
+  $("#carrito-ir-catalogo").addEventListener("click", () => cerrarCarrito(false));
+  $("#btn-vaciar").addEventListener("click", vaciarCarrito);
+  $("#btn-finalizar").addEventListener("click", finalizarCompra);
+
+  /* Teclado: Escape cierra y Tab no se escapa del panel o modal abierto */
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape") {
+      if (modalAbierto()) cerrarModal();
+      else if (carritoAbierto()) cerrarCarrito();
+      else if (menuAbierto()) { cerrarMenu(); $("#menu-btn").focus(); }
+    } else if (evento.key === "Tab") {
+      if (modalAbierto()) atraparFoco(evento, $(".modal__caja"));
+      else if (carritoAbierto()) atraparFoco(evento, $("#carrito"));
+    }
+  });
+
+  /* Sombra del header al bajar */
+  const header = $("#header");
+  const revisarScroll = () => header.classList.toggle("header--scroll", window.scrollY > 8);
+  window.addEventListener("scroll", revisarScroll, { passive: true });
+  revisarScroll();
+}
+
+/* ==========================================================
+   INICIAR TIENDA
+   ========================================================== */
+function iniciarTienda() {
+  llenarFiltroSelecciones();
+  mostrarSelecciones();
+  mostrarDestacados();
+  mostrarProductos();
+  mostrarTestimonios();
+  actualizarCarrito();
+  cargarImagenHero();
+  registrarEventos();
+  iniciarAcordeon();
+  iniciarNavActiva();
+  iniciarAnimaciones();
+  $("#anio").textContent = new Date().getFullYear();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", iniciarTienda);
+} else {
+  iniciarTienda();
+}
